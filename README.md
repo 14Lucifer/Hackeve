@@ -29,7 +29,7 @@ Built with Next.js 14, PostgreSQL 16, and Prisma, and deployed with Docker Compo
 ## Quick start
 
 ```bash
-git clone https://github.com/<your-account>/hackathon-submission-portal.git
+git clone https://github.com/14Lucifer/Hackeve.git
 cd hackathon-submission-portal
 cp .env.example .env        # then edit the passwords and JWT_SECRET
 docker compose up -d --build
