@@ -1,0 +1,20 @@
+# HTTP mode: plaintext on port 80, no certificates. Use only on trusted networks or behind your own TLS proxy.
+{
+	auto_https off
+}
+
+:80 {
+	encode zstd gzip
+
+	request_body {
+		max_size 2100MB
+	}
+
+	reverse_proxy web:3000 {
+		transport http {
+			read_timeout 3600s
+			write_timeout 3600s
+		}
+		flush_interval -1
+	}
+}

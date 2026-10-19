@@ -1,0 +1,20 @@
+# HTTPS mode: Caddy obtains and renews a free Let's Encrypt certificate for DOMAIN.
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	request_body {
+		max_size 2100MB
+	}
+
+	reverse_proxy web:3000 {
+		transport http {
+			read_timeout 3600s
+			write_timeout 3600s
+		}
+		flush_interval -1
+	}
+}

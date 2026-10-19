@@ -1,0 +1,131 @@
+// Participant = allow-listed email. Admin and Judge = username/password.
+// Submission is 1:1 with the team "owner" (the first team member).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Participant {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  locked      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ownedSubmission   Submission?            @relation("Owner")
+  memberOf          SubmissionMember[]
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Judge {
+  id           String       @id @default(cuid())
+  username     String       @unique
+  displayName  String
+  passwordHash String
+  locked       Boolean      @default(false)
+  scores       JudgeScore[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Settings {
+  id                Int       @id @default(1)
+  deadline          DateTime?
+  judgingDeadline   DateTime?
+  rankingsPublished Boolean   @default(false)
+  eventName         String    @default("Hackathon Submission Portal")
+  organizerName     String    @default("")
+  logoPath          String?
+  logoMimeType      String?
+  updatedAt         DateTime  @updatedAt
+}
+
+model Submission {
+  id                   String                @id @default(cuid())
+  teamName             String
+  projectName          String
+  description          String
+  status               String                @default("draft") // draft | submitted
+  isFinalist           Boolean               @default(false)
+  finalistSelectedAt   DateTime?
+  ownerId              String                @unique
+  owner                Participant           @relation("Owner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members              SubmissionMember[]
+  files                SubmissionFile[]
+  recommendedQuestions RecommendedQuestion[]
+  scores               JudgeScore[]
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  submittedAt          DateTime?
+
+  @@index([status])
+  @@index([isFinalist])
+}
+
+model SubmissionMember {
+  id            String      @id @default(cuid())
+  submissionId  String
+  participantId String
+  submission    Submission  @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@unique([submissionId, participantId])
+}
+
+model SubmissionFile {
+  id            String     @id @default(cuid())
+  submissionId  String
+  kind          String     // summary | screenshot | video
+  originalName  String
+  storagePath   String
+  mimeType      String
+  size          Int
+  position      Int        @default(0)
+  createdAt     DateTime   @default(now())
+  submission    Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([submissionId, kind])
+}
+
+model RecommendedQuestion {
+  id           String     @id @default(cuid())
+  submissionId String
+  text         String
+  position     Int
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@unique([submissionId, position])
+  @@index([submissionId])
+}
+
+model JudgeScore {
+  id                 String     @id @default(cuid())
+  judgeId            String
+  submissionId       String
+  valuePracticality  Int
+  creativity         Int
+  aiTechnical        Int
+  completenessUx     Int
+  responsibleAi      Int
+  notes              String?
+  completedAt        DateTime   @default(now())
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  judge              Judge      @relation(fields: [judgeId], references: [id], onDelete: Cascade)
+  submission         Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@unique([judgeId, submissionId])
+  @@index([submissionId])
+}

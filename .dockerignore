@@ -1,0 +1,16 @@
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+node_modules
+.next
+data
+uploads
+docs
+caddy
+*.md
+*.log
+Dockerfile
+docker-compose.yml
+.dockerignore
